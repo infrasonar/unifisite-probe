@@ -10,3 +10,6 @@ testing/
 
 # Target
 target/
+
+
+/test.py
