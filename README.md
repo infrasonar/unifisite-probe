@@ -29,7 +29,6 @@ Available checks:
 - `device`
 - `event`
 - `health`
-- `system`
 
 Create a yaml file, for example _(test.yaml)_:
 
