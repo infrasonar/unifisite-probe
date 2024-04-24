@@ -4,6 +4,7 @@ from lib.unificonn import get_session
 from urllib.parse import quote
 
 
+MAX_ITEMS = 2000
 IGNORE_KEYS = (
     'EVT_WU_Connected',
     'EVT_WU_Disconnected',
@@ -27,13 +28,21 @@ async def check_event(
             resp.raise_for_status()
             data = await resp.json()
 
+    # Each event is translated to an item. InfraSonar does not support more
+    # than 2000 items per type, therefore we need to truncate the result
+    # and only return the newest events. This only happens on relatively
+    # large sites with many events.
+    data = list(data['data'])
+    data.sort(key=lambda i: i.get('time') or 0)
+    data = data[-MAX_ITEMS:]
+
     event = [{
         'name': d['_id'],
         'key': d['key'],
         'msg': d.get('msg'),
         'subsystem': d.get('subsystem'),
-        'time': int(d.get('time') / 1000) if d.get('time') else None,
-    } for d in data['data'] if d['key'] not in IGNORE_KEYS]
+        'time': int(d['time'] / 1000) if d.get('time') else None,
+    } for d in data if d['key'] not in IGNORE_KEYS]
     return {
         'event': event
     }
