@@ -5,6 +5,7 @@ from typing import Tuple
 from libprobe.asset import Asset
 from libprobe.exceptions import CheckException
 from lib.connection_cache import ConnectionCache
+from . import DOCS_URL
 
 
 async def login(asset: Asset, is_unify_os: bool, address: str, port: int,
@@ -64,8 +65,11 @@ async def get_session(asset: Asset, asset_config: dict,
     ssl = check_config.get('ssl', False)
     username = asset_config.get('username')
     password = asset_config.get('password')
-    if None in (username, password):
-        raise CheckException('missing credentials')
+    if username is None or password is None:
+        raise CheckException(
+            'Missing credentials. Please refer to the following documentation'
+            f' for detailed instructions: <{DOCS_URL}>'
+        )
 
     # we use everything what identifies a connection for an asset as key
     # of the cached 'connection'
