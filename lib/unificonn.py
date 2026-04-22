@@ -1,7 +1,6 @@
 import aiohttp
 import logging
 import os
-from typing import Tuple
 from libprobe.asset import Asset
 from libprobe.exceptions import CheckException
 from lib.connection_cache import ConnectionCache
@@ -57,7 +56,7 @@ async def detect_if_unify_os(asset: Asset, address: str, port: int,
 
 
 async def get_session(asset: Asset, local_config: dict,
-                      config: dict) -> Tuple[dict, bool]:
+                      config: dict) -> tuple[dict, bool]:
 
     address = config.get('address')
     if not address:
