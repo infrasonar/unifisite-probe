@@ -1,16 +1,16 @@
 from libprobe.probe import Probe
-from lib.check.device import check_device
-from lib.check.event import check_event
-from lib.check.health import check_health
+from lib.check.device import CheckDevice
+from lib.check.event import CheckEvent
+from lib.check.health import CheckHealth
 from lib.version import __version__ as version
 
 
 if __name__ == '__main__':
-    checks = {
-        'device': check_device,
-        'event': check_event,
-        'health': check_health,
-    }
+    checks = (
+        CheckDevice,
+        CheckEvent,
+        CheckHealth,
+    )
 
     probe = Probe('unifisite', version, checks)
     probe.start()
