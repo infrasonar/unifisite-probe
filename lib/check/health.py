@@ -1,7 +1,7 @@
 import aiohttp
 from libprobe.asset import Asset
 from libprobe.check import Check
-from lib.unificonn import get_session
+from lib.unificonn import get_credentials, sanity_check
 from urllib.parse import quote
 from ..connector import get_connector
 
@@ -15,14 +15,22 @@ class CheckHealth(Check):
 
         site_name = config.get('site', 'default')
         ssl = config.get('ssl', False)
-        session, is_unifi_os = await get_session(asset, local_config, config)
-        uri = '/proxy/network/api/s/' if is_unifi_os else '/api/s/'
-        url = f'{uri}{quote(site_name, safe="")}/stat/health'
-        async with aiohttp.ClientSession(
-                connector=get_connector(),
-                **session) as session:
-            async with session.get(url, ssl=ssl) as resp:
-                resp.raise_for_status()
+        credentials = await get_credentials(asset, local_config, config)
+
+        base_url = credentials['base_url']
+        is_unifi_os = credentials['is_unifi_os']
+        cookies = credentials['cookies']
+        headers = credentials['headers']
+
+        site_name = quote(site_name, safe="")
+
+        prefix = '/proxy/network' if is_unifi_os else ''
+        url = f"{base_url}{prefix}/api/s/{site_name}/stat/health"
+
+        async with aiohttp.ClientSession(cookies=cookies,
+                                         connector=get_connector()) as session:
+            async with session.get(url, headers=headers, ssl=ssl) as resp:
+                await sanity_check(resp, url)
                 data = await resp.json()
 
         health = [{
