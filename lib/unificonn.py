@@ -159,4 +159,29 @@ async def sanity_check(resp: aiohttp.ClientResponse, url: str):
         raise ValueError(
             f"Expected JSON from {url}, "
             f"but received {content_type}: {raw_text[:200]}")
-    resp.raise_for_status()
+
+    try:
+        resp.raise_for_status()
+    except aiohttp.ClientResponseError as e:
+        msg = None
+        try:
+            data = await resp.json()
+            if isinstance(data, dict):
+                # Check UniFi meta msg pattern
+                meta = data.get('meta')
+                if isinstance(meta, dict):
+                    msg = meta.get('msg')
+
+                # Fallback for UniFi OS / standard API responses
+                if not msg:
+                    msg = data.get('message')
+        except Exception:
+            # If JSON parsing fails during error handling,
+            # fall back to the original exception
+            pass
+
+        if msg:
+            msg = f"{msg} ({e.status} {e.message}, url='{url}')"
+            raise CheckException(msg) from e
+
+        raise e
